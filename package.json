@@ -1,0 +1,29 @@
+{
+  "name": "gridsome-source-etsy",
+  "version": "0.1.0",
+  "description": "Simple Etsy products source for Gridsome",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spacedawwwg/gridsome-source-etsy.git"
+  },
+  "keywords": [
+    "etsy",
+    "gridsome"
+  ],
+  "author": "Paul Welsh <paul@nonbreakingspace.co.uk> (http://nonbreakingspace.co.uk/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/spacedawwwg/gridsome-source-etsy/issues"
+  },
+  "homepage": "https://github.com/spacedawwwg/gridsome-source-etsy#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "camelcase": "^5.3.1",
+    "decode-entities": "^1.0.7",
+    "lodash": "^4.17.15"
+  }
+}
