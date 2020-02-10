@@ -41,6 +41,7 @@ query {
         currencyCode
         path
         url
+        slug
         images {
           url_fullxfull
           full_height
