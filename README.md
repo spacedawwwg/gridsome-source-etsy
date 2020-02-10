@@ -25,6 +25,35 @@ module.exports = {
 }
 ```
 
+## Example Query
+
+```
+<page-query>
+query {
+  allEtsyProduct(filter:{ state: { eq:"active" } } ) {
+    edges {
+      node {
+        id
+        state
+        listingId
+        title
+        price
+        currencyCode
+        path
+        url
+        images {
+          url_fullxfull
+          full_height
+          full_width
+        }
+        description
+      }
+    }
+  }
+}
+</page-query>
+```
+
 ## Helpful links
 - How to get your Etsy shop ID: https://support.cartrover.com/portal/kb/articles/how-to-get-your-etsy-shop-id
 - Register for Etsy API token: https://www.etsy.com/developers/documentation/getting_started/register
