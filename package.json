@@ -12,7 +12,9 @@
   },
   "keywords": [
     "etsy",
-    "gridsome"
+    "gridsome",
+    "gridsome-plugin",
+    "gridsome-source"
   ],
   "author": "Paul Welsh <paul@nonbreakingspace.co.uk> (http://nonbreakingspace.co.uk/)",
   "license": "ISC",
