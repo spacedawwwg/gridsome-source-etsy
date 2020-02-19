@@ -26,6 +26,7 @@
     "axios": "^0.19.2",
     "camelcase": "^5.3.1",
     "decode-entities": "^1.0.7",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.15",
+    "sharp": "^0.24.1"
   }
 }

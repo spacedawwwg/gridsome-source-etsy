@@ -1,5 +1,5 @@
-
 const axios = require('axios');
+const sharp = require('sharp');
 const camelCase = require('camelcase');
 const { isPlainObject } = require('lodash');
 const decodeEntities = require('decode-entities');
@@ -38,7 +38,9 @@ class EtsySource {
   }
 
   async getProducts(store, options) {
-    const { data } = await this.fetch(`/shops/${options.shopId}/listings/active?api_key=${options.token}`);
+    const { data } = await this.fetch(
+      `/shops/${options.shopId}/listings/active?api_key=${options.token}`
+    );
 
     const products = store.addCollection({
       typeName: this.createTypeName(`Product`)
@@ -46,10 +48,27 @@ class EtsySource {
 
     for (const product of data.results) {
       const fields = this.normalizeFields(product);
-      const imageReq = await this.fetch(`/private/listings/${fields.listingId}/images?api_key=${options.token}`);
+      const imagesReq = await this.fetch(
+        `/private/listings/${fields.listingId}/images?api_key=${options.token}`
+      );
+      const thumbUrl = imagesReq.data.results[0].url_fullxfull;
+      const thumbReq = await axios.get(thumbUrl, {
+        responseType: 'arraybuffer'
+      });
+      const thumbResized = await sharp({
+        create: {
+          width: 15,
+          height: 15
+        }
+      })
+        .png()
+        .toBuffer();
+      const thumbType = thumbReq.headers['content-type'];
+      const base64 = thumbResized.toString('base64');
       products.addNode({
         ...fields,
-        images: imageReq.data.results,
+        images: imagesReq.data.results,
+        lqip: `data:image/${thumbType};base64,${base64}`,
         slug: this.stringToSlug(fields.title)
       });
     }
@@ -65,7 +84,7 @@ class EtsySource {
         throw new Error(`${code} - ${config.url}`);
       }
 
-      console.log(response)
+      console.log(response);
       const { url } = response.config;
       const { status } = response.data.data;
 
@@ -114,18 +133,19 @@ class EtsySource {
     str = decodeEntities(str);
     str = str.replace(/^\s+|\s+$/g, ''); // trim
     str = str.toLowerCase();
-  
+
     // remove accents, swap ñ for n, etc
-    var from = "àáäâèéëêìíïîòóöôùúüûñç·/_,:;";
-    var to   = "aaaaeeeeiiiioooouuuunc------";
-    for (var i=0, l=from.length ; i<l ; i++) {
+    var from = 'àáäâèéëêìíïîòóöôùúüûñç·/_,:;';
+    var to = 'aaaaeeeeiiiioooouuuunc------';
+    for (var i = 0, l = from.length; i < l; i++) {
       str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
     }
-  
-    str = str.replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+
+    str = str
+      .replace(/[^a-z0-9 -]/g, '') // remove invalid chars
       .replace(/\s+/g, '-') // collapse whitespace and replace by -
       .replace(/-+/g, '-'); // collapse dashes
-  
+
     return str;
   }
 }
