@@ -1,5 +1,5 @@
 const axios = require('axios');
-const sharp = require('sharp');
+const Jimp = require('jimp');
 const camelCase = require('camelcase');
 const { isPlainObject } = require('lodash');
 const decodeEntities = require('decode-entities');
@@ -52,23 +52,13 @@ class EtsySource {
         `/private/listings/${fields.listingId}/images?api_key=${options.token}`
       );
       const thumbUrl = imagesReq.data.results[0].url_fullxfull;
-      const thumbReq = await axios.get(thumbUrl, {
-        responseType: 'arraybuffer'
-      });
-      const thumbResized = await sharp({
-        create: {
-          width: 15,
-          height: 15
-        }
-      })
-        .png()
-        .toBuffer();
-      const thumbType = thumbReq.headers['content-type'];
-      const base64 = thumbResized.toString('base64');
+      const thumbReq = await Jimp.read(thumbUrl);
+      const thumbResized = await thumbReq.resize(15, Jimp.AUTO);
+      const base64 = await thumbResized.getBase64Async('image/png');
       products.addNode({
         ...fields,
         images: imagesReq.data.results,
-        lqip: `data:image/${thumbType};base64,${base64}`,
+        lqip: base64,
         slug: this.stringToSlug(fields.title)
       });
     }
