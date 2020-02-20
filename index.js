@@ -3,6 +3,7 @@ const Jimp = require('jimp');
 const camelCase = require('camelcase');
 const { isPlainObject } = require('lodash');
 const decodeEntities = require('decode-entities');
+const readline = require('readline');
 
 class EtsySource {
   static defaultOptions() {
@@ -48,23 +49,28 @@ class EtsySource {
     });
 
     console.log(`Loading image(s) data from Etsy`);
-    for (const product of data.results) {
+    for (const [productIndex, product] of data.results.entries()) {
       const fields = this.normalizeFields(product);
       const imagesReq = await this.fetch(
         `/private/listings/${fields.listingId}/images?api_key=${options.token}`
       );
       const images = [...imagesReq.data.results];
       if (options.lqip) {
-        for await (const image of imagesReq.data.results) {
+        for await (const [imageIndex, image] of imagesReq.data.results.entries()) {
           for await (let [key, value] of Object.entries(image)) {
             if (key.startsWith('url_570xN')) {
-              console.log(`Generating lqip for Etsy product ${product.id}...`);
+              readline.clearLine(process.stdout);
+              readline.cursorTo(process.stdout, 0);
+              process.stdout.write(`Generating lqip's (Etsy product ${productIndex+1} of ${data.results.length}, image ${imageIndex+1} of ${imagesReq.data.results.length})...`);
               const thumbReq = await Jimp.read(value);
               const thumbResized = await thumbReq.resize(15, Jimp.AUTO);
               const base64 = await thumbResized.getBase64Async('image/png');
               image['lqip'] = base64;
             }
           }
+        }
+        if (productIndex + 1 === data.results.length) {
+          process.stdout.write(`\n`);
         }
       }
       products.addNode({
