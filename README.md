@@ -16,6 +16,7 @@ module.exports = {
         shopId: 'ETSY_SHOP_ID', // required
         token: 'ETSY_API_TOKEN', // required
         typeName: 'Etsy',
+        lqip: false // set to 'true' to generate lqip data uri's 
       }
     }
   ],

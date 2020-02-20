@@ -1,15 +1,17 @@
-
 const axios = require('axios');
+const Jimp = require('jimp');
 const camelCase = require('camelcase');
 const { isPlainObject } = require('lodash');
 const decodeEntities = require('decode-entities');
+const readline = require('readline');
 
 class EtsySource {
   static defaultOptions() {
     return {
       storeId: null,
       token: null,
-      typeName: 'Etsy'
+      typeName: 'Etsy',
+      lqip: false
     };
   }
 
@@ -38,18 +40,46 @@ class EtsySource {
   }
 
   async getProducts(store, options) {
-    const { data } = await this.fetch(`/shops/${options.shopId}/listings/active?api_key=${options.token}`);
+    const { data } = await this.fetch(
+      `/shops/${options.shopId}/listings/active?api_key=${options.token}`
+    );
 
     const products = store.addCollection({
       typeName: this.createTypeName(`Product`)
     });
 
-    for (const product of data.results) {
+    console.log(`Loading image(s) data from Etsy`);
+    for (const [index, product] of data.results.entries()) {
       const fields = this.normalizeFields(product);
-      const imageReq = await this.fetch(`/private/listings/${fields.listingId}/images?api_key=${options.token}`);
+      const imagesReq = await this.fetch(
+        `/private/listings/${fields.listingId}/images?api_key=${options.token}`
+      );
+      const images = [...imagesReq.data.results];
+      if (options.lqip) {
+        for await (const image of imagesReq.data.results) {
+          for await (let [key, value] of Object.entries(image)) {
+            if (key.startsWith('url_570xN')) {
+              const thumbReq = await Jimp.read(value);
+              const thumbResized = await thumbReq.resize(15, Jimp.AUTO);
+              const base64 = await thumbResized.getBase64Async('image/png');
+              image['lqip'] = base64;
+            }
+          }
+          readline.clearLine(process.stdout, 0);
+          readline.cursorTo(process.stdout, 0, null);
+          process.stdout.write(
+            `Generating lqip for Etsy product ${index + 1} of ${
+              data.results.length
+            }...`
+          );
+        }
+        if (index + 1 === data.results.length) {
+          process.stdout.write(`\n`);
+        }
+      }
       products.addNode({
         ...fields,
-        images: imageReq.data.results,
+        images: images,
         slug: this.stringToSlug(fields.title)
       });
     }
@@ -65,7 +95,7 @@ class EtsySource {
         throw new Error(`${code} - ${config.url}`);
       }
 
-      console.log(response)
+      console.log(response);
       const { url } = response.config;
       const { status } = response.data.data;
 
@@ -114,18 +144,19 @@ class EtsySource {
     str = decodeEntities(str);
     str = str.replace(/^\s+|\s+$/g, ''); // trim
     str = str.toLowerCase();
-  
+
     // remove accents, swap ñ for n, etc
-    var from = "àáäâèéëêìíïîòóöôùúüûñç·/_,:;";
-    var to   = "aaaaeeeeiiiioooouuuunc------";
-    for (var i=0, l=from.length ; i<l ; i++) {
+    var from = 'àáäâèéëêìíïîòóöôùúüûñç·/_,:;';
+    var to = 'aaaaeeeeiiiioooouuuunc------';
+    for (var i = 0, l = from.length; i < l; i++) {
       str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
     }
-  
-    str = str.replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+
+    str = str
+      .replace(/[^a-z0-9 -]/g, '') // remove invalid chars
       .replace(/\s+/g, '-') // collapse whitespace and replace by -
       .replace(/-+/g, '-'); // collapse dashes
-  
+
     return str;
   }
 }
