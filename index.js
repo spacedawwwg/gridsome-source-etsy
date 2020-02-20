@@ -3,6 +3,7 @@ const Jimp = require('jimp');
 const camelCase = require('camelcase');
 const { isPlainObject } = require('lodash');
 const decodeEntities = require('decode-entities');
+const readline = require('readline');
 
 class EtsySource {
   static defaultOptions() {
@@ -64,8 +65,8 @@ class EtsySource {
               image['lqip'] = base64;
             }
           }
-          process.stdout.clearLine();
-          process.stdout.cursorTo(0);
+          readline.clearLine(process.stdout, 0);
+          readline.cursorTo(process.stdout, 0, null);
           process.stdout.write(
             `Processing lqip's for Etsy product ${index + 1} of ${
               data.results.length
