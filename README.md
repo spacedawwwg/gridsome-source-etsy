@@ -47,6 +47,7 @@ query {
           url_fullxfull
           full_height
           full_width
+          lqip
         }
         description
       }
