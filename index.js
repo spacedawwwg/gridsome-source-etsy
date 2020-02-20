@@ -9,7 +9,8 @@ class EtsySource {
     return {
       storeId: null,
       token: null,
-      typeName: 'Etsy'
+      typeName: 'Etsy',
+      lqip: true
     };
   }
 
@@ -46,19 +47,38 @@ class EtsySource {
       typeName: this.createTypeName(`Product`)
     });
 
-    for (const product of data.results) {
+    console.log(`Loading image(s) data from Etsy`);
+    for (const [index, product] of data.results.entries()) {
       const fields = this.normalizeFields(product);
       const imagesReq = await this.fetch(
         `/private/listings/${fields.listingId}/images?api_key=${options.token}`
       );
-      const thumbUrl = imagesReq.data.results[0].url_fullxfull;
-      const thumbReq = await Jimp.read(thumbUrl);
-      const thumbResized = await thumbReq.resize(15, Jimp.AUTO);
-      const base64 = await thumbResized.getBase64Async('image/png');
+      const images = [...imagesReq.data.results];
+      if (options.lqip) {
+        for await (const image of imagesReq.data.results) {
+          for await (let [key, value] of Object.entries(image)) {
+            if (key.startsWith('url_570xN')) {
+              const thumbReq = await Jimp.read(value);
+              const thumbResized = await thumbReq.resize(15, Jimp.AUTO);
+              const base64 = await thumbResized.getBase64Async('image/png');
+              image['lqip'] = base64;
+            }
+          }
+          process.stdout.clearLine();
+          process.stdout.cursorTo(0);
+          process.stdout.write(
+            `Processing lqip's for Etsy product ${index + 1} of ${
+              data.results.length
+            }...`
+          );
+        }
+        if (index + 1 === data.results.length) {
+          process.stdout.write(`\n`);
+        }
+      }
       products.addNode({
         ...fields,
-        images: imagesReq.data.results,
-        lqip: base64,
+        images: images,
         slug: this.stringToSlug(fields.title)
       });
     }
