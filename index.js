@@ -11,7 +11,7 @@ class EtsySource {
       storeId: null,
       token: null,
       typeName: 'Etsy',
-      lqip: true
+      lqip: false
     };
   }
 
@@ -68,7 +68,7 @@ class EtsySource {
           readline.clearLine(process.stdout, 0);
           readline.cursorTo(process.stdout, 0, null);
           process.stdout.write(
-            `Processing lqip's for Etsy product ${index + 1} of ${
+            `Generating lqip for Etsy product ${index + 1} of ${
               data.results.length
             }...`
           );
