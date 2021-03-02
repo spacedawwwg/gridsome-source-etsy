@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/spacedawwwg/gridsome-source-etsy#readme",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "camelcase": "^6.0.0",
     "decode-entities": "^1.0.7",
     "jimp": "^0.12.1",
