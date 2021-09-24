@@ -1,6 +1,6 @@
 {
   "name": "gridsome-source-etsy",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Simple Etsy products source for Gridsome",
   "main": "index.js",
   "scripts": {
